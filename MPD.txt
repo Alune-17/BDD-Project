@@ -1,0 +1,109 @@
+Joueur
+- id_joueur CHAR(36) PRIMARY KEY
+- pseudo VARCHAR(50) NOT NULL
+- niveau_compte INT NOT NULL
+- rang_palier VARCHAR(12) NULL
+- division_palier CHAR(2) NULL
+- points_ligue INT NULL
+
+Match_
+- id_match VARCHAR(20) PRIMARY KEY
+- date_match DATETIME NOT NULL
+- duree_secondes INT NOT NULL
+
+Item
+- id_item INT PRIMARY KEY
+- nom_item VARCHAR(50) NOT NULL UNIQUE
+
+ModeJeu
+- id_mode VARCHAR(10) PRIMARY KEY
+- nom_mode VARCHAR(30) NOT NULL UNIQUE
+
+Champion
+- id_champion VARCHAR(20) PRIMARY KEY
+- nom_affiche VARCHAR(40) NOT NULL
+
+Rune
+- id_rune INT PRIMARY KEY
+- main_rune VARCHAR(40) NOT NULL
+- arbre_principal1 VARCHAR(20) NOT NULL
+- arbre_principal2 VARCHAR(50) NOT NULL
+- arbre_principal3 VARCHAR(50) NOT NULL
+- arbre_secondaire1 VARCHAR(50) NOT NULL
+- arbre_secondaire2 VARCHAR(50) NOT NULL
+- stats1 VARCHAR(50) NOT NULL
+- stats2 VARCHAR(50) NOT NULL
+- stats3 VARCHAR(50) NOT NULL
+
+SkinChampion
+- id_champion VARCHAR(20) NOT NULL REFERENCES Champion(id_champion)
+- id_skin VARCHAR(50) NOT NULL
+- nom_skin VARCHAR(50) NOT NULL
+- PRIMARY KEY (id_champion, id_skin)
+
+ItemJoueur
+- id_item VARCHAR(50) PRIMARY KEY
+- nom_item VARCHAR(50) NOT NULL UNIQUE
+- slot INT NOT NULL
+
+RuneJoueur
+- id_rune VARCHAR(50) PRIMARY KEY
+- nom_rune VARCHAR(50) NOT NULL
+- arbre_rune VARCHAR(50) NOT NULL
+
+PageStatistiqueJoueur
+- id_match VARCHAR(20) NOT NULL REFERENCES Match_(id_match)
+- id_joueur CHAR(36) NOT NULL REFERENCES Joueur(id_joueur)
+- lane VARCHAR(10) NOT NULL
+- resultat_joueur CHAR(1) NOT NULL
+- niveau_fin INT NOT NULL
+- kills INT NOT NULL
+- deaths INT NOT NULL
+- assists INT NOT NULL
+- cs_total INT NOT NULL
+- degats_infliges INT NOT NULL
+- score_vision INT NOT NULL
+- cs_par_minute DECIMAL(5,2) NOT NULL
+- degats_par_minute DECIMAL(7,2) NOT NULL
+- vision_par_minute DECIMAL(5,2) NOT NULL
+- side INT NOT NULL
+- PRIMARY KEY (id_match, id_joueur)
+
+Acheter
+- id_champion VARCHAR(20) NOT NULL REFERENCES Champion(id_champion)
+- id_item INT NOT NULL REFERENCES Item(id_item)
+- slot INT NOT NULL
+- PRIMARY KEY (id_champion, id_item)
+
+StatistiquesChamp
+- id_joueur CHAR(36) NOT NULL REFERENCES Joueur(id_joueur)
+- id_champion VARCHAR(20) NOT NULL REFERENCES Champion(id_champion)
+- id_mode VARCHAR(10) NOT NULL REFERENCES ModeJeu(id_mode)
+- note CHAR(1) NOT NULL
+- taux_victoire DECIMAL(5,2) NOT NULL
+- parties_jouees INT NOT NULL
+- kda_moyen DECIMAL(5,2) NOT NULL
+- taux_ban DECIMAL(5,2) NOT NULL
+- PRIMARY KEY (id_joueur, id_champion, id_mode)
+
+Choisir
+- id_champion VARCHAR(20) NOT NULL REFERENCES Champion(id_champion)
+- id_rune INT NOT NULL REFERENCES Rune(id_rune)
+- PRIMARY KEY (id_champion, id_rune)
+
+Ami
+- id_joueur CHAR(36) NOT NULL REFERENCES Joueur(id_joueur)
+- id_joueur_1 CHAR(36) NOT NULL REFERENCES Joueur(id_joueur)
+- PRIMARY KEY (id_joueur, id_joueur_1)
+
+AcheterJoueur
+- id_joueur CHAR(36) NOT NULL REFERENCES Joueur(id_joueur)
+- id_match VARCHAR(20) NOT NULL REFERENCES Match_(id_match)
+- id_item VARCHAR(50) NOT NULL REFERENCES ItemJoueur(id_item)
+- PRIMARY KEY (id_joueur, id_match, id_item)
+
+ChoisirJoueur
+- id_joueur CHAR(36) NOT NULL REFERENCES Joueur(id_joueur)
+- id_match VARCHAR(20) NOT NULL REFERENCES Match_(id_match)
+- id_rune VARCHAR(50) NOT NULL REFERENCES RuneJoueur(id_rune)
+- PRIMARY KEY (id_joueur, id_match, id_rune)

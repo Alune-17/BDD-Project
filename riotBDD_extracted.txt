@@ -1,0 +1,149 @@
+
+3				CalibriCalibriCalibriCalibri<<
+<<			CalibriCalibriCalibriCalibriCalibriCalibri
+[FK]`CalibriCalibriCalibri		ddd<CalibriIIdd-- =========================
+-- 1) Dimensions / Rfrentiels
+-- =========================
+
+CREATE TABLE Joueur (
+  id_joueur      CHAR(36)     PRIMARY KEY,
+  niveau_compte  INT          NOT NULL,
+  rang_palier    VARCHAR(12)  NULL,
+  division_palier CHAR(2)     NULL,
+  points_ligue   INT          NULL
+);
+
+CREATE TABLE ModeJeu (
+  id_mode   VARCHAR(10)  PRIMARY KEY,
+  nom_mode  VARCHAR(30)  NOT NULL,
+  CONSTRAINT uq_modejeux_nom UNIQUE (nom_mode)
+);
+
+CREATE TABLE Match_ (
+  id_match       VARCHAR(20) PRIMARY KEY,
+  date_match     DATETIME    NOT NULL,
+  duree_secondes INT         NOT NULL
+  -- Si un match appartient  un mode, dcommente :
+  -- , id_mode VARCHAR(10) NOT NULL,
+  -- FOREIGN KEY (id_mode) REFERENCES ModeJeu(id_mode)
+);
+
+CREATE TABLE Item (
+  id_item   INT          PRIMARY KEY,
+  nom_item  VARCHAR(50)  NOT NULL,
+  slot      INT          NOT NULL,
+  -- Si, ct mtier, chaque nom d'item est unique :
+  CONSTRAINT uq_item_nom UNIQUE (nom_item)
+);
+
+CREATE TABLE Champion (
+  id_champion  VARCHAR(20) PRIMARY KEY,
+  nom_affiche  VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE Rune (
+  id_rune    INT          PRIMARY KEY,
+  nom_rune   VARCHAR(40)  NOT NULL,
+  arbre_rune VARCHAR(20)  NOT NULL
+);
+
+-- =========================
+-- 2) Faits / Associations
+-- =========================
+
+-- Page de stats d'un joueur dans un match
+-- Cl naturelle : une seule ligne par (match, joueur)
+CREATE TABLE PageStatistiqueJoueur (
+  id_match          VARCHAR(20)  NOT NULL,
+  id_joueur         CHAR(36)     NOT NULL,
+  lane              VARCHAR(10)  NULL,
+  resultat_joueur   CHAR(1)      NULL,  -- 'W'/'L' par ex.
+  niveau_fin        INT          NULL,
+  kills             INT          NULL,
+  deaths            INT          NULL,
+  assists           INT          NULL,
+  cs_total          INT          NULL,
+  degats_infliges   INT          NULL,
+  score_vision      INT          NULL,
+  cs_par_minute         DECIMAL(5,2)  NULL,
+  degats_par_minute     DECIMAL(7,2)  NULL,
+  vision_par_minute     DECIMAL(5,2)  NULL,
+  side              INT          NULL,  -- 0/1 si besoin
+
+  CONSTRAINT pk_psj PRIMARY KEY (id_match, id_joueur),
+  CONSTRAINT fk_psj_match  FOREIGN KEY (id_match)  REFERENCES Match_(id_match),
+  CONSTRAINT fk_psj_joueur FOREIGN KEY (id_joueur) REFERENCES Joueur(id_joueur)
+);
+
+-- Statistiques d'un joueur pour un champion dans un mode donn
+CREATE TABLE StatistiquesChamp (
+  id_joueur    CHAR(36)     NOT NULL,
+  id_champion  VARCHAR(20)  NOT NULL,
+  id_mode      VARCHAR(10)  NOT NULL,
+  note         CHAR(1)      NULL,         -- A/B/C
+  taux_victoire     DECIMAL(5,2) NULL,    -- en %
+  parties_jouees    INT         NULL,
+  kda_moyen         DECIMAL(5,2) NULL,
+  taux_ban          DECIMAL(5,2) NULL,    -- en % (si c'est bien "par joueur")
+  CONSTRAINT pk_stat_champ PRIMARY KEY (id_joueur, id_champion, id_mode),
+  CONSTRAINT fk_sc_joueur   FOREIGN KEY (id_joueur)   REFERENCES Joueur(id_joueur),
+  CONSTRAINT fk_sc_champion FOREIGN KEY (id_champion) REFERENCES Champion(id_champion),
+  CONSTRAINT fk_sc_mode     FOREIGN KEY (id_mode)     REFERENCES ModeJeu(id_mode)
+);
+
+-- Amiti (non oriente) : on vite doublons et auto-amiti
+CREATE TABLE Ami (
+  id_joueur     CHAR(36) NOT NULL,
+  id_joueur_1   CHAR(36) NOT NULL,
+  CONSTRAINT pk_ami PRIMARY KEY (id_joueur, id_joueur_1),
+  CONSTRAINT fk_ami_joueur   FOREIGN KEY (id_joueur)   REFERENCES Joueur(id_joueur),
+  CONSTRAINT fk_ami_joueur_1 FOREIGN KEY (id_joueur_1) REFERENCES Joueur(id_joueur),
+  CONSTRAINT ck_ami_diff CHECK (id_joueur <> id_joueur_1)
+  -- Option (si ton SGBD le permet) pour forcer un seul ordre et empcher (A,B) et (B,A) :
+  -- CONSTRAINT ck_ami_order CHECK (id_joueur < id_joueur_1)
+);
+
+-- Items achets par un joueur dans un match
+CREATE TABLE Acheter (
+  id_item    INT         NOT NULL,
+  id_match   VARCHAR(20) NOT NULL,
+  id_joueur  CHAR(36)    NOT NULL,
+
+  CONSTRAINT pk_acheter PRIMARY KEY (id_item, id_match, id_joueur),
+  CONSTRAINT fk_ach_item   FOREIGN KEY (id_item)   REFERENCES Item(id_item),
+  CONSTRAINT fk_ach_match  FOREIGN KEY (id_match)  REFERENCES Match_(id_match),
+  CONSTRAINT fk_ach_joueur FOREIGN KEY (id_joueur) REFERENCES Joueur(id_joueur)
+  -- Si tu veux compter plusieurs achats du mme item,
+  -- ajoute un attribut (ex: quantite INT) ou un horodatage, et adapte la PK.
+);
+
+-- Runes choisies par un joueur dans un match
+CREATE TABLE Choisir (
+  id_rune    INT         NOT NULL,
+  id_match   VARCHAR(20) NOT NULL,
+  id_joueur  CHAR(36)    NOT NULL,
+
+  CONSTRAINT pk_choisir PRIMARY KEY (id_rune, id_match, id_joueur),
+  CONSTRAINT fk_ch_rune   FOREIGN KEY (id_rune)   REFERENCES Rune(id_rune),
+  CONSTRAINT fk_ch_match  FOREIGN KEY (id_match)  REFERENCES Match_(id_match),
+  CONSTRAINT fk_ch_joueur FOREIGN KEY (id_joueur) REFERENCES Joueur(id_joueur)
+  -- Idem : si multiples occurrences par rune, ajoute un champ (ex: slot_rune) dans la PK.
+);
+  
+@@@???@Lien 159@2222222@2  @@@???@Lien 156@2222222@2   @@@???@2@22222222222221@	Lien 2@???@@ 
+  @@@???@2@2222222@Lien 1@???@@  @@@???@2@2222222@Lien 8  @@@???@ 2@!2222222@"Lien 4@@@@@@@@@@@@@@/b2
+@0Cl naturelle : une seule ligne par (match, joueur)@1laneNULL222
+22resultat_joueurNULL22222 'W'/'L' par ex.niveau_finNULL222222killsNULL222222deathsNULL222222assistsNULL222222cs_totalNULL222222degats_infligesNULL222222score_visionNULL222222cs_par_minuteNULL222222degats_par_minuteNULL222222vision_par_minuteNULL222222sideNULL222222 0/1 si besoin@2PageStatistiqueJoueur  @@@???@Lien 161@2222222@2  @@@???@Lien 158@2222222@23@4Match_@5id_match22222date_match222222duree_secondes222222 Si un match appartient  un mode, dcommente :  , id_mode VARCHAR(10) NOT NULL,  FOREIGN KEY (id_mode) REFERENCES ModeJeu(id_mode)@6 7 8@9@:@;???@<Lien 124@=2222222@>2 ? @@A@B@C???@D2@E2222222@FLien 5G+2
+@HItems achets par un joueur dans un match@Islot222222@JAcheterK@LItem@Mid_item222222nom_item222222@N O P@Q@R@S???@T2@U2222222@VLien 10W@X@Yid_mode222
+22nom_mode22222@ZModeJeu [ \@]@^@_???@`2@a2222222@bLien 9cTG2
+@dStatistiquesChamp@enoteNULL22222 A/B/Ctaux_victoireNULL222222 en %parties_joueesNULL222222kda_moyenNULL222222taux_banNULL222222 en % (si c'est bien "par joueur")@fStatistiques d'un joueur pour un champion dans un mode donn  @@@???@2@2222222@Lien 148 g h@i@j@k???@lLien 123@m2222222@n2o@p@qid_champion22222nom_affiche222(22@rChampion s t@u@v@w???@x2@y2222222@zLien 11{@|Rune@}
+id_rune222222main_rune222(22arbre_principal122222arbre_principal2222222arbre_principal3222222arbre_secondaire1222222arbre_secondaire2222222stats1222222stats2222222stats3222222@~'2
+@Runes choisies par un joueur dans un match@@Choisir%2
+@Ami@@Amiti (non oriente) : on vite doublons et auto-amiti  @@@???@2@2222222@Lien 149n@SkinChampion@id_skin222222nom_skinHH222222@/2
+@Possder@@  @@@???@Lien 157@2222222@2FE2
+@AcheterJoueur@@  @@@???@Lien 160@2222222@2@2
+@@@ChoisirJoueur@ItemJoueur@id_item222222nom_item222222slot222222@@RuneJoueur@id_rune222222nom_rune222222arbre_rune222222@##	##
+
+
+
+#c"! #/$%&###.-,(3+*)'/((('''210///33456333<=>8G;:97o888777FED@KCBA?G@@@???JIHGGGLMNKKKVUTPWSRQOcPPPOOOZYXWWWba`\o_^][c\\\[[[defcccolmnhkjigohhhgggrqpooozyxt{wvustttsss|}~{{{
